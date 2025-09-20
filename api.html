@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRouter Chat Tester</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles for Responsive Chat UI -->
+    <style>
+        :root {
+            --background-dark: #0d1a22;
+            --sidebar-bg: #111b21;
+            --chat-bg: #0e161a;
+            --header-bg: #202c33;
+            --input-bg: #202c33;
+            --input-field-bg: #2a3942;
+            --user-bubble-bg: #005c4b;
+            --ai-bubble-bg: #202c33;
+            --text-primary: #e0e0e0;
+            --text-secondary: #8696a0;
+            --border-color: #2f3b44;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+        }
+        .app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 1600px;
+            max-height: 100vh;
+            display: flex;
+            background-color: var(--chat-bg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        /* Sidebar (Contact List) */
+        .sidebar {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+        }
+        .sidebar-header {
+            padding: 0.75rem 1rem;
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-header .form-control {
+            background-color: var(--input-field-bg);
+            border-color: #3b4a54;
+            color: var(--text-primary);
+        }
+        .contact-list {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #1a242a;
+            transition: background-color 0.2s;
+        }
+        .contact-item:hover {
+            background-color: #2a3942;
+        }
+        .contact-item.active {
+            background-color: #2a3942;
+        }
+        .contact-info {
+            font-weight: 500;
+        }
+        
+        /* Chat Area */
+        .chat-area {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background-color: var(--header-bg);
+            color: var(--text-primary);
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .back-button {
+            display: none; /* Hidden on desktop */
+            cursor: pointer;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .message-bubble {
+            padding: 0.6rem 1rem;
+            border-radius: 12px;
+            max-width: 75%;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        .user-message {
+            background-color: var(--user-bubble-bg);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .ai-message {
+            background-color: var(--ai-bubble-bg);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .typing-indicator {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 0.75rem;
+            background-color: var(--input-bg);
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .chat-input-area .form-control {
+            background-color: var(--input-field-bg);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            border-radius: 20px;
+        }
+        .chat-input-area .btn {
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Responsive Layout */
+        @media (min-width: 768px) {
+            .app-container {
+                max-height: 95vh;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+            .sidebar {
+                flex: 0 0 340px; /* Desktop sidebar width */
+            }
+            .chat-area {
+                flex-grow: 1;
+            }
+        }
+        @media (max-width: 767px) {
+            .sidebar {
+                display: flex;
+            }
+            .chat-area {
+                display: none;
+            }
+            .app-container.show-chat .sidebar {
+                display: none;
+            }
+            .app-container.show-chat .chat-area {
+                display: flex;
+            }
+            .back-button {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+        <!-- Sidebar with Chat/Model List -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <input type="password" class="form-control" id="apiKey" value="sk-or-v1-3f788153461a5293f75353b659667c952676f4c2833e19c010fa5a936fb8204" placeholder="OpenRouter API Key">
+            </div>
+            <div class="contact-list" id="contactList">
+                <!-- AI Model contacts will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Main Chat Window -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="back-button" id="backButton">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                    </svg>
+                </div>
+                <div class="chat-info">
+                    <h5 class="mb-0" id="chatHeaderName">Select a model to start</h5>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                 <!-- Chat messages will appear here -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="form-control" id="prompt" placeholder="Type a message..." disabled>
+                <button class="btn btn-primary" id="sendRequestBtn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-send-fill" viewBox="0 0 16 16">
+                      <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const apiKeyInput = document.getElementById('apiKey');
+        const promptInput = document.getElementById('prompt');
+        const sendBtn = document.getElementById('sendRequestBtn');
+        const chatMessagesEl = document.getElementById('chatMessages');
+        const contactListEl = document.getElementById('contactList');
+        const chatHeaderNameEl = document.getElementById('chatHeaderName');
+        const appContainer = document.getElementById('appContainer');
+        const backButton = document.getElementById('backButton');
+
+        const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+        
+        const models = [
+            { id: "gryphe/mythomax-l2-13b", name: "MythoMax L2 13B" },
+            { id: "google/gemini-flash-1.5", name: "Google: Gemini Flash 1.5" },
+            { id: "openai/gpt-4o", name: "OpenAI: GPT-4o" },
+            { id: "anthropic/claude-3-haiku", name: "Anthropic: Claude 3 Haiku" },
+            { id: "meta-llama/llama-3-8b-instruct", name: "Meta: Llama 3 8B Instruct" },
+            { id: "mistralai/mistral-7b-instruct", name: "Mistral: 7B Instruct" },
+        ];
+
+        let currentModelId = null;
+        let chatHistories = {};
+
+        // --- Data Persistence ---
+        const saveHistories = () => {
+            localStorage.setItem('openRouterChatHistories', JSON.stringify(chatHistories));
+        };
+
+        const loadHistories = () => {
+            const storedHistories = localStorage.getItem('openRouterChatHistories');
+            if (storedHistories) {
+                chatHistories = JSON.parse(storedHistories);
+            } else {
+                // Initialize empty history for each model
+                models.forEach(model => {
+                    chatHistories[model.id] = [];
+                });
+            }
+        };
+        
+        // --- UI Rendering ---
+        const renderContactList = () => {
+            contactListEl.innerHTML = '';
+            models.forEach(model => {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'contact-item';
+                contactDiv.dataset.modelId = model.id;
+                contactDiv.innerHTML = `<div class="contact-info">${model.name}</div>`;
+                contactDiv.addEventListener('click', () => selectChat(model.id));
+                contactListEl.appendChild(contactDiv);
+            });
+        };
+
+        const addMessageToChatUI = (message, sender) => {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', sender === 'user' ? 'user-message' : 'ai-message');
+            messageBubble.textContent = message;
+            chatMessagesEl.appendChild(messageBubble);
+            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+        };
+
+        const renderChatHistory = (modelId) => {
+            chatMessagesEl.innerHTML = '';
+            const history = chatHistories[modelId] || [];
+            history.forEach(msg => {
+                addMessageToChatUI(msg.content, msg.role === 'user' ? 'user' : 'ai');
+            });
+        };
+
+        const selectChat = (modelId) => {
+            currentModelId = modelId;
+            const model = models.find(m => m.id === modelId);
+
+            // Update header
+            chatHeaderNameEl.textContent = model.name;
+            promptInput.disabled = false;
+            sendBtn.disabled = false;
+
+            // Update active contact
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.modelId === modelId);
+            });
+
+            // Render history
+            renderChatHistory(modelId);
+            
+            // Switch view on mobile
+            appContainer.classList.add('show-chat');
+        };
+
+        // --- API Logic ---
+        const handleApiRequest = async () => {
+            const prompt = promptInput.value.trim();
+            if (!prompt || !currentModelId) return;
+
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                addMessageToChatUI('Error: Please enter your OpenRouter API key in the top-left input field.', 'ai');
+                return;
+            }
+
+            addMessageToChatUI(prompt, 'user');
+            chatHistories[currentModelId].push({ role: 'user', content: prompt });
+            promptInput.value = '';
+            sendBtn.disabled = true;
+
+            const typingIndicator = document.createElement('div');
+            typingIndicator.classList.add('message-bubble', 'ai-message', 'typing-indicator');
+            typingIndicator.textContent = 'AI is typing...';
+            chatMessagesEl.appendChild(typingIndicator);
+            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+
+            try {
+                const response = await fetch(OPENROUTER_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: currentModelId,
+                        messages: chatHistories[currentModelId],
+                        max_tokens: 2048
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                   throw new Error(data.error?.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                // On success, remove the indicator
+                chatMessagesEl.removeChild(typingIndicator);
+
+                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                    const aiResponse = data.choices[0].message.content;
+                    addMessageToChatUI(aiResponse, 'ai');
+                    chatHistories[currentModelId].push({ role: 'assistant', content: aiResponse });
+                } else {
+                    addMessageToChatUI('Could not find a valid message in the response.', 'ai');
+                }
+
+            } catch (error) {
+                console.error('API Request Error:', error);
+                // If an error occurs, ensure the indicator is removed before showing the error message
+                if (typingIndicator.parentNode === chatMessagesEl) {
+                    chatMessagesEl.removeChild(typingIndicator);
+                }
+                addMessageToChatUI(`Error: ${error.message}`, 'ai');
+            } finally {
+                sendBtn.disabled = false;
+                promptInput.focus();
+                saveHistories();
+            }
+        };
+
+        // --- Event Listeners & Initialization ---
+        sendBtn.addEventListener('click', handleApiRequest);
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleApiRequest();
+            }
+        });
+        backButton.addEventListener('click', () => {
+            appContainer.classList.remove('show-chat');
+            currentModelId = null;
+            document.querySelectorAll('.contact-item').forEach(item => item.classList.remove('active'));
+            chatHeaderNameEl.textContent = 'Select a model to start';
+            promptInput.disabled = true;
+            sendBtn.disabled = true;
+            chatMessagesEl.innerHTML = '';
+        });
+
+        // Initial load
+        loadHistories();
+        renderContactList();
+
+    </script>
+</body>
+</html>
+
+
