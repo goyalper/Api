@@ -28,7 +28,7 @@ jobs:
       - name: Process HTML file with API key
         run: |
           # Replace the placeholder with the actual API key from secrets
-          sed 's/\${{ secrets\.API_KEY }}/${{ env.API_KEY }}/g' index.html > processed_index.html
+          sed "s/\\\${{ secrets\.API_KEY }}/${API_KEY}/g" index.html > processed_index.html
           mv processed_index.html index.html
         env:
           API_KEY: ${{ secrets.API_KEY }}
